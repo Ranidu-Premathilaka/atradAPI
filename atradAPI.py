@@ -436,8 +436,3 @@ password = "k@UD7QrmI2L!27y"
 #get order book 
 #https://online.softlogicstockbrokers.lk/atsweb/marketdetails?action=getOrderBook&format=json&board=1&security=AAIC.N0000&dojo.preventCache=1735445973386
 
-
-api = AtradAPI()
-
-api.login(username,password)
-api.buy("AEL.N0000",2,10)
