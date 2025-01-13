@@ -6,6 +6,8 @@ class AtradAPI:
         self.session = requests.Session()
         self.loginStatus = False
         self.userInfo = {}
+        self.marketDetails = {}
+        self.boardId
 
         self.login_url = "https://online.softlogicstockbrokers.lk/atsweb/login"
         self.order_url = "https://online.softlogicstockbrokers.lk/atsweb/order"
@@ -101,6 +103,82 @@ class AtradAPI:
             print("Failed to fetch user info")
             return False
 
+    def getMarketDetails(self):
+        exchangeId = self.userInfo["exchangeId"]
+        params = {
+            "action":"getMarketDetails",
+            "format":"json",
+            "market":exchangeId
+        }
+
+        response = self.sendGetResponse(self.order_url,params)
+        if response["description"] == "success":
+            self.marketDetails = response["data"]["market"]
+            self.boardId = self.marketDetails[0]["assets"][0]["code"]
+
+            return True
+        else:
+            return False
+    
+    def getOrderRestrictions(self):
+        print("Fetching Order Restrictions")
+
+        params = {
+            "action":"getOrderRestrictions",
+            "format":"json",
+            "clientAcc":self.userInfo["clientCode"],
+            "exchange":self.userInfo["exchangeId"],
+            "broker":self.userInfo["brokerId"],
+            "clientAnctId":self.userInfo["clientacntid"],
+            "security":""
+        }
+
+        response = self.sendGetResponse(self.order_url,params)
+        if response["description"] == "success":
+            print("successfully fetched Order Restrictions")
+            return response["data"]["orderlimits"]
+        else:
+            print("Failed to get Order Restrictions ")
+            return False
+        
+    def getMarketStatus(self,securityId):
+        print("Fetching Market Status")
+
+        params = {
+            "action":"getMarketStatus",
+            "format":"json",
+            "securityid":securityId,
+            "bordId":self.boardId,
+            "exchange":self.userInfo["exchangeId"]
+        }
+
+        response = self.sendGetResponse(self.order_url,params)
+        if response["description"] == "success":
+            print("successfully fetched Market Status")
+            return response["data"]
+        else:
+            print("Failed to get Market Status ")
+            return False
+    
+    def getSecurityProperties(self,securityId):
+        print("Fetching Security Properties")
+        params = {
+            "action":"getSecurityProperties",
+            "format":"json",
+            "txtSecurityId":securityId
+        }
+
+        response = self.sendGetResponse(self.order_url,params)
+
+        #always success check other attributes
+        if response["description"] == "success":
+            print("successfully fetched Security properties")
+            return response["data"]["SecurityDetail"][0]
+        else:
+            print("Failed to get Security properties")
+            return False
+
+
     #implmenet so that some stocks can be rounded up if the prce isn't rounded up properly 
     #try to reudce the hard codded values
     def buy(self,securityId,quantity,price):
@@ -185,6 +263,7 @@ class AtradAPI:
 
     def getOrderBook(self,securityId):
         print("Fetching Order Book")
+
         params = {
             "action":"getOrderBook",
             "format":"json",
@@ -198,23 +277,6 @@ class AtradAPI:
             return dict_response["data"]
         else:
             print("Failed to get Order Book ")
-            return False
-
-    def getSecurityProperties(self,securityId):
-        print("Fetching Security Properties")
-        params = {
-            "action":"getSecurityProperties",
-            "format":"json",
-            "txtSecurityId":securityId
-        }
-        response = self.session.get(self.order_url,params = params)
-        dict_response = self.responseParser(response)
-        #always success check other attributes
-        if dict_response["description"] == "success":
-            print("successfully fetched Security properties")
-            return dict_response["data"]["SecurityDetail"][0]
-        else:
-            print("Failed to get Security properties ")
             return False
 
     def calcCommision(self,orderValue):
