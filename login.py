@@ -7,10 +7,20 @@ class AtradAPI:
         self.loginStatus = False
         self.userInfo = {}
         self.marketDetails = {}
+        self.allSecurity = []
+        self.bookDefId = 1
+        self.tickerId = "0"
+        
+        #in getSecurityProperties there's the attibute on what market it is. 
+        # thus you could fetch the proper one from market details
         self.boardId
+        self.accountType = "normal"
+        self.cseFee 
 
         self.login_url = "https://online.softlogicstockbrokers.lk/atsweb/login"
         self.order_url = "https://online.softlogicstockbrokers.lk/atsweb/order"
+        self.watch_url = "https://online.softlogicstockbrokers.lk/atsweb/watch"
+        self.market_url= "https://online.softlogicstockbrokers.lk/atsweb/market"
 
     def sendGetResponse(self,url,params,header=None):
         if header == None:
@@ -178,6 +188,146 @@ class AtradAPI:
             print("Failed to get Security properties")
             return False
 
+    def getOrderRestrictions(self,securityId):
+        print("Fetching Order Restrictions")
+
+        params = {
+            "action":"getOrderRestrictions",
+            "format":"json",
+            "clientAcc":self.userInfo["clientCode"],
+            "exchange":self.userInfo["exchangeId"],
+            "broker":self.userInfo["brokerId"],
+            "clientAnctId":self.userInfo["clientacntid"],
+            "security":securityId
+        }
+
+        response = self.sendGetResponse(self.order_url,params)
+        if response["description"] == "success":
+            print("successfully fetched Order Restrictions")
+            return response["data"]["orderlimits"]
+        else:
+            print("Failed to get Order Restrictions ")
+            return False
+
+    def calcCommision(self,orderValue):
+        print("Calculating Commision")
+
+        params = {
+            "action":"calcCommission",
+            "format":"json",
+            "orderValue":orderValue,
+            "accountType":self.accountType,
+            "broker":self.userInfo["brokerId"],
+            "exchange":self.userInfo["exchangeId"]
+        }
+        response = self.session.get(self.order_url,params)
+
+        if response["description"] == "success":
+            print("successfully calculated Commision")
+            return response["data"]["commision"][0]
+        else:
+            print("Failed to calculate Commision")
+            return False
+
+    def getAllSecurities(self):
+        print("Fetching All Securities")
+
+        params = {
+            "action":"getAllSecurities",
+            "format":"json",
+            "exchange":self.userInfo["exchangeId"]
+        }
+
+        response = self.sendGetResponse(self.watch_url,params)
+        if response["description"] == "success":
+            print("successfully fetched All Securities")
+            return response["data"]["items"]
+        else:
+            print("Failed to get All Securities ")
+            return False
+
+    def getWatchForSecurity(self,securityId):
+        print("Fetching Watch for Security")
+
+        params = {
+            "action":"getWatchForSecurity",
+            "format":"json",
+            "security":securityId,
+            "exchange":self.userInfo["exchangeId"],
+            "bookDefId":self.bookDefId
+        }
+
+        response = self.sendGetResponse(self.watch_url,params)
+        if response["description"] == "success":
+            print("successfully fetched Watch for Security")
+            return response["data"]
+        else:
+            print("Failed to get Watch for Security ")
+            return False
+        
+    def getTickerData(self):
+        print("Fetching Ticker Data")
+
+        params = {
+            "action":"getTickerData",
+            "format":"json",
+            "tickerId":self.tickerId
+        }
+
+        response = self.sendGetResponse(self.market_url,params)
+        if response["description"] == "success":
+            print("successfully fetched Ticker Data")
+            return response["data"]["ticker"]
+        else:
+            print("Failed to get Ticker Data ")
+            return False
+
+    def getCSEFeesForDebt(self):
+        print("Fetching CSE Fees for Debt")
+
+        params = {
+            "action":"getCSEFeesForDebt",
+            "format":"json"
+            "market":self.userInfo["exchangeId"]
+        }
+
+        response = self.sendGetResponse(self.marketdetails_url,params)
+        if response["description"] == "success":
+            print("successfully fetched CSE Fees for Debt")
+            self.cseFee = response["data"]["cseFees"].split(",")[0]
+        else:
+            print("Failed to get CSE Fees for Debt ")
+            return False
+
+    def getOrderBook(self,securityId):
+        print("Fetching Order Book")
+
+        params = {
+            "action":"getOrderBook",
+            "format":"json",
+            "board":self.boardId,
+            "security":securityId
+        }
+        response = self.sendGetResponse(self.marketdetails_url,params)
+
+        if response["description"] == "success":
+            print("successfully fetched Order Book")
+            return response["data"]["orderbook"][0]
+        else:
+            print("Failed to get Order Book ")
+            return False
+
+
+
+    #def checkBuyDisable(self):
+    #def getAvlSahres(self):
+    #def getBlotterData(self):
+    #def getSectorData(self):
+    #def getCustomWatches(self):
+    #def getOrderStatuses(self):
+    #def getPriceChange(self):
+
+
 
     #implmenet so that some stocks can be rounded up if the prce isn't rounded up properly 
     #try to reudce the hard codded values
@@ -260,45 +410,6 @@ class AtradAPI:
 
     def quickSell(self,securityId,quantity):
         print("Quick Selling for the market Value")
-
-    def getOrderBook(self,securityId):
-        print("Fetching Order Book")
-
-        params = {
-            "action":"getOrderBook",
-            "format":"json",
-            "board":1,
-            "security":securityId
-        }
-        response = self.session.get(self.order_url,params = params)
-        dict_response = self.responseParser(response)
-        if dict_response["description"] == "success":
-            print("successfully fetched Order Book")
-            return dict_response["data"]
-        else:
-            print("Failed to get Order Book ")
-            return False
-
-    def calcCommision(self,orderValue):
-        print("Calculating Commision")
-        params = {
-            "action":"calcCommission",
-            "format":"json",
-            "orderValue":orderValue,
-            "accountType":"normal",
-            "broker":self.userInfo["brokerId"],
-            "exchange":self.userInfo["exchangeId"]
-        }
-        response = self.session.get(self.order_url,params = params)
-        dict_response = self.responseParser(response)
-
-        if dict_response["description"] == "success":
-            print("successfully calculated Commision")
-            return dict_response["data"]["commision"]
-        else:
-            print("Failed to calculate Commision ")
-            return False
-
 username = "90772"
 password = "k@UD7QrmI2L!27y" 
 
