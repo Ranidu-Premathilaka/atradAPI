@@ -21,6 +21,7 @@ class AtradAPI:
         self.order_url = "https://online.softlogicstockbrokers.lk/atsweb/order"
         self.watch_url = "https://online.softlogicstockbrokers.lk/atsweb/watch"
         self.market_url= "https://online.softlogicstockbrokers.lk/atsweb/market"
+        self.marketdetails_url= "https://online.softlogicstockbrokers.lk/atsweb/marketdetails"
 
     def sendGetResponse(self,url,params,header=None):
         if header == None:
@@ -318,6 +319,20 @@ class AtradAPI:
             return False
 
 
+    def checkUserSession(self):
+        params = {
+            "action":"checkUserSession",
+            "format":"json",
+            "txtUserName":self.userInfo["username"]
+        }
+
+        response = self.sendGetResponse(self.login_url,params)
+        if response["description"] == "success" and response["data"]["validation"][0] == "true":
+            print("User Session is active")
+            return True
+        else:
+            print("User Session is inactive")
+            return False
 
     #def checkBuyDisable(self):
     #def getAvlSahres(self):
@@ -326,8 +341,6 @@ class AtradAPI:
     #def getCustomWatches(self):
     #def getOrderStatuses(self):
     #def getPriceChange(self):
-
-
 
     #implmenet so that some stocks can be rounded up if the prce isn't rounded up properly 
     #try to reudce the hard codded values
