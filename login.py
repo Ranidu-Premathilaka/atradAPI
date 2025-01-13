@@ -14,41 +14,27 @@ class AtradAPI:
         if header == None:
             header = {"Content-Type":"application/x-www-form-urlencoded"}
         
-        response = self.session.get(url,headers=header,params=params)
-        dictResponse = self.responseParser(response)
+        rawResponse = self.session.get(url,headers=header,params=params)
+        
+        if rawResponse.status_code != 200:
+            print("Failed to get response")
+            return False
+    
+        dictResponse = self.responseParser(rawResponse)
         return dictResponse
 
     def sendPostResponse(self,url,data,header=None):
         if header == None:
             header = {"Content-Type":"application/x-www-form-urlencoded"}
 
-        response = self.session.get(url,headers=header,data=data)
-        dictResponse = self.responseParser(response)
-        return dictResponse
+        rawResponse = self.session.get(url,headers=header,data=data)
 
-
-    def login(self,username,password):
-        headers = {"Content-Type":"application/x-www-form-urlencoded"}
-        data = {
-            "action":"login",
-            "format":"json",
-            "txtUserName":username,
-            "txtPassword":password
-        }
-        login_response = self.session.post(self.login_url,headers=headers,data=data)
-        print(login_response.content)
-        print("\n")
-        login_responseContent = self.responseParser(login_response)
-
-        if (login_response.status_code ==200 and login_responseContent["data"] =="success"):
-            print("Login Successful")
-            self.loginStatus = True
-            value =  self.getUserInfo()
-            return value
-        else:
-            self.loginStatus = False
-            print("Login failed")
+        if rawResponse.status_code != 200:
+            print("Failed to get response")
             return False
+
+        dictResponse = self.responseParser(rawResponse)
+        return dictResponse
 
     def responseParser(self,response):
         try:
@@ -69,27 +55,50 @@ class AtradAPI:
                 print(response_content)
                 return False
 
-    def getUserInfo(self):
+
+    def getUserInfo(self,username):
         print("Fetching cliend Account info")
 
-        headers = {"Content-Type":"application/x-www-form-urlencoded"}
         params = {
             "action":"getUserDetails",
             "format":"json"
         }
 
-        response = self.session.get(self.order_url,headers=headers,params=params)
-        print(response.content)
-        print("\n")
-        dict_response = self.responseParser(response)
+        response = self.sendGetResponse(self.order_url,params)
         
-        #implement a way to check if the response is valid by username
-        if dict_response["description"] == "success":
-            self.userInfo = dict_response["data"]["userids"][0]
-            print("successfully fetched")
+        if response["description"] == "success":
+            userInfo = response["data"]["userids"][0]
+            if userInfo["username"] == username:
+                self.userInfo = userInfo
+                return True
+
+        return False
+
+
+
+    def login(self,username,password):
+        print("Logging in")
+
+        data = {
+            "action":"login",
+            "format":"json",
+            "txtUserName":username,
+            "txtPassword":password
+        }
+        response = self.session.post(self.login_url,data=data)
+
+        if (response == False or response["data"] !="success"):
+            self.loginStatus = False
+            print("Login failed")
+            return False
+
+        if(self.getUserInfo()):
+            self.loginStatus = True
+            print("Successfully Logged in")
             return True
         else:
-            print("failed to fetch")
+            self.loginStatus = False
+            print("Failed to fetch user info")
             return False
 
     #implmenet so that some stocks can be rounded up if the prce isn't rounded up properly 
