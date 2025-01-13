@@ -9,7 +9,24 @@ class AtradAPI:
 
         self.login_url = "https://online.softlogicstockbrokers.lk/atsweb/login"
         self.order_url = "https://online.softlogicstockbrokers.lk/atsweb/order"
+
+    def sendGetResponse(self,url,params,header=None):
+        if header == None:
+            header = {"Content-Type":"application/x-www-form-urlencoded"}
         
+        response = self.session.get(url,headers=header,params=params)
+        dictResponse = self.responseParser(response)
+        return dictResponse
+
+    def sendPostResponse(self,url,data,header=None):
+        if header == None:
+            header = {"Content-Type":"application/x-www-form-urlencoded"}
+
+        response = self.session.get(url,headers=header,data=data)
+        dictResponse = self.responseParser(response)
+        return dictResponse
+
+
     def login(self,username,password):
         headers = {"Content-Type":"application/x-www-form-urlencoded"}
         data = {
