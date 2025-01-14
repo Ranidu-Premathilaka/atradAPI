@@ -130,13 +130,13 @@ class AtradAPI:
                 raise Exception("Invalid Json Response")
             return dict_response
         except:
-            print("Invalid Json Response. Trying to parse it manually")
+            #print("Invalid Json Response. Trying to parse it manually")
             response_content = response.content
             response_content = response_content.decode("utf-8")
             response_content.replace("'",'"')
             try:
                 dict_response = json5.loads(response_content)          
-                print("successfully parced using json5")
+                #print("successfully parced using json5")
                 return dict_response
             except:
                 print("Couldn't parse json file. Printing response")
@@ -400,7 +400,7 @@ class AtradAPI:
             "format":"json",
             "txtCDSActCode":self.userInfo["clientCode"],
             "txtSecuritycode":securityId,
-            "exchange":self.userInkfo["exchangeId"],
+            "exchange":self.userInfo["exchangeId"],
             "broker":self.userInfo["brokerId"],
             "accountid":self.userInfo["clientacntid"],
             "ordPrice":orderPrice,
@@ -408,7 +408,7 @@ class AtradAPI:
         }
 
         response = self.sendGetResponse(self.order_url,params)
-        if response["description"] == "success" and response["data"]["buyDisable"] == "false":
+        if response["description"] == "success" and response["data"]["buyDisable"] == False:
             return False
         else:
             return True
@@ -452,8 +452,8 @@ class AtradAPI:
         orderStatus = self.getMarketStatus(securityId)["tradestatus"]
 
         #checking if buyingpower is enough
-        buyingPower = self.getOrderRestrictions(securityId)["buyingpower"]
-        orderValue = quantity * price + int(self.calcCommision(quantity * price))
+        buyingPower = float(self.getOrderRestrictions(securityId)["buyingpower"])
+        orderValue = quantity * price + float(self.calcCommision(quantity * price))
         if orderValue > buyingPower:
             print("Not enough buying power")
             return False
