@@ -4,6 +4,7 @@ username = "90772"
 password = "k@UD7QrmI2L!27y" 
 
 api = AtradAPI(username, password)
+api.buy("AAIC.N0000",2,13.2,day=5)
 
 print(api.getUserInfo())
-print(api.genDuplicateOrderId)
+print(api.genDuplicateOrderId())

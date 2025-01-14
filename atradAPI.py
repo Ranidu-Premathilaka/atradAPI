@@ -70,7 +70,7 @@ class AtradAPI:
 
 
         allSecurity = self.getAllSecurities()
-        if not self.allSecurity:
+        if not allSecurity:
             print("Failed to get All Securities")
             return False
         self.allSecurity = allSecurity 
@@ -80,6 +80,8 @@ class AtradAPI:
             print("Failed to get CSE Fees for Debt")
             return False
         self.cseFee = cseFee
+
+        return True
 
     def reLogin(self):
         if not self.checkUserSession(checkReLogin=False):
@@ -357,7 +359,7 @@ class AtradAPI:
 
         response = self.sendGetResponse(self.marketdetails_url,params)
         if response["description"] == "success":
-            return response["data"]["cseFees"].split(",")[0]
+            return response["data"]["cseFee"].split(",")[0]
         else:
             return False
 
@@ -388,7 +390,7 @@ class AtradAPI:
         }
 
         response = self.sendGetResponse(self.login_url,params,checkReLogin=checkReLogin)
-        if response["description"] == "success" and response["data"]["validation"][0] == "true":
+        if response["description"] == "success" and response["data"]["validation"][0] == True:
             return True
         return False
 
@@ -451,7 +453,7 @@ class AtradAPI:
 
         #checking if buyingpower is enough
         buyingPower = self.getOrderRestrictions(securityId)["buyingpower"]
-        orderValue = quantity * price + int(self.calcCommision(quantity * price)["commission"])
+        orderValue = quantity * price + int(self.calcCommision(quantity * price))
         if orderValue > buyingPower:
             print("Not enough buying power")
             return False
