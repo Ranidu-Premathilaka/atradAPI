@@ -41,13 +41,11 @@ class AtradAPI:
     def initVariables(self):
         userInfo = self.getUserInfo()
         if (not userInfo) or (userInfo["username"] != self.username):
-            print("Failed to get User Info")
             return False
         self.userInfo = userInfo 
 
         marketDetails = self.getMarketDetails() 
         if not marketDetails:
-            print("Failed to get Market Details")
             return False
 
         #in getSecurityProperties there's the attibute on what market it is. 
@@ -71,13 +69,11 @@ class AtradAPI:
 
         allSecurity = self.getAllSecurities()
         if not allSecurity:
-            print("Failed to get All Securities")
             return False
         self.allSecurity = allSecurity 
 
         cseFee = self.getCSEFeesForDebt()
         if not cseFee:
-            print("Failed to get CSE Fees for Debt")
             return False
         self.cseFee = cseFee
 
@@ -157,8 +153,10 @@ class AtradAPI:
         if response["description"] == "success":
             userInfo = response["data"]["userids"][0]
             if userInfo["username"]:
+                print("successfully fetched cliend Account info")
                 return userInfo
 
+        print("Failed to fetch cliend Account info")
         return False
 
 
@@ -193,7 +191,10 @@ class AtradAPI:
 
         response = self.sendGetResponse(self.order_url,params)
         if response["description"] == "success":
+            print("successfully fetched Market Details")
             return response["data"]["market"]
+
+        print("Failed to get Market Details")
         return False
     
     def getOrderRestrictions(self):
@@ -383,6 +384,7 @@ class AtradAPI:
 
 
     def checkUserSession(self,checkReLogin = True):
+        print("Checking User Session")
         params = {
             "action":"checkUserSession",
             "format":"json",
@@ -391,10 +393,14 @@ class AtradAPI:
 
         response = self.sendGetResponse(self.login_url,params,checkReLogin=checkReLogin)
         if response["description"] == "success" and response["data"]["validation"][0] == True:
+            print("User Session is valid")
             return True
+        
+        print("User Session is invalid")
         return False
 
     def checkBuyDisable(self,securityId,orderPrice,orderQty):
+        print("Checking Buy Disable")
         params = {
             "action":"checkBuyDisable",
             "format":"json",
@@ -409,8 +415,10 @@ class AtradAPI:
 
         response = self.sendGetResponse(self.order_url,params)
         if response["description"] == "success" and response["data"]["buyDisable"] == False:
+            print("Buy is not disabled")
             return False
         else:
+            print("Buy is disabled")
             return True
 
     def genDuplicateOrderId(self):
@@ -424,6 +432,8 @@ class AtradAPI:
         return order_id
 
     def getBlotterData(self):
+        print("Fetching Blotter Data")
+
         params = {
             "action":"getBlotterData",
             "format":"json",
@@ -437,7 +447,11 @@ class AtradAPI:
 
         response = self.sendGetResponse(self.order_url,params)
         if response["description"] == "success":
+            print("successfully fetched Blotter Data")
             return response["data"]["blotterdata"]
+
+        print("Failed to get Blotter Data")
+        return False
     
     def buy(self,securityId,quantity,price,orderType="limit",tif="day",day=1,minfillqty=0,discloseqty=None):
         print("Processing Buy Order")
@@ -580,17 +594,14 @@ class AtradAPI:
         else:
             print("Failed to cancel the order")
             return False
+ 
+
+    def sell(self,securityId,quantity,price):
+        print("Processing Sell Order")
+
     #def getAvlSahres(self):
     #def getBlotterData(self):
     #def getSectorData(self):
     #def getCustomWatches(self):
     #def getOrderStatuses(self):
     #def getPriceChange(self):
-
-
-
-    def sell(self,securityId,quantity,price):
-        print("Processing Sell Order")
-
-    def quickSell(self,securityId,quantity):
-        print("Quick Selling for the market Value")
