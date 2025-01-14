@@ -1,7 +1,11 @@
+from dotenv import load_dotenv
 from atradAPI import AtradAPI
+import os
 
-username = "90772"
-password = "k@UD7QrmI2L!27y" 
+load_dotenv()
+
+username = os.getenv("USERNAME")
+password = os.getenv("PASSWORD")
 
 api = AtradAPI(username, password)
 api.buy("AAIC.N0000",2,13.2,day=1)
