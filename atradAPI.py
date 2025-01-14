@@ -82,15 +82,16 @@ class AtradAPI:
         self.cseFee = cseFee
 
     def reLogin(self):
-        if not self.checkUserSession():
+        if not self.checkUserSession(checkReLogin=False):
             print("User Session Expired")
-            if not self.login(self.userInfo["username"],self.userInfo["password"]):
+            if not self.login(self.username,self.password):
                 print("Failed to re-login")
                 return False
         return True    
 
-    def sendGetResponse(self,url,params,header=None):
-        self.reLogin()
+    def sendGetResponse(self,url,params,header=None,checkReLogin = True):
+        if checkReLogin:
+            self.reLogin()
 
         if header == None:
             header = {"Content-Type":"application/x-www-form-urlencoded"}
@@ -104,8 +105,9 @@ class AtradAPI:
         dictResponse = self.responseParser(rawResponse)
         return dictResponse
 
-    def sendPostResponse(self,url,data,header=None):
-        self.reLogin()
+    def sendPostResponse(self,url,data,header=None,checkReLogin = True):
+        if checkReLogin:
+            self.reLogin()
 
         if header == None:
             header = {"Content-Type":"application/x-www-form-urlencoded"}
@@ -132,6 +134,7 @@ class AtradAPI:
             response_content.replace("'",'"')
             try:
                 dict_response = json5.loads(response_content)          
+                print("successfully parced using json5")
                 return dict_response
             except:
                 print("Couldn't parse json file. Printing response")
@@ -167,7 +170,7 @@ class AtradAPI:
             "txtUserName":username,
             "txtPassword":password
         }
-        response = self.sendPostResponse(self.login_url,data)
+        response = self.sendPostResponse(self.login_url,data,checkReLogin=False)
 
         if (response != False and response["data"] =="success"):
             self.loginStatus = True
@@ -377,14 +380,14 @@ class AtradAPI:
             return False
 
 
-    def checkUserSession(self):
+    def checkUserSession(self,checkReLogin = True):
         params = {
             "action":"checkUserSession",
             "format":"json",
             "txtUserName":self.username
         }
 
-        response = self.sendGetResponse(self.login_url,params)
+        response = self.sendGetResponse(self.login_url,params,checkReLogin=checkReLogin)
         if response["description"] == "success" and response["data"]["validation"][0] == "true":
             return True
         return False
