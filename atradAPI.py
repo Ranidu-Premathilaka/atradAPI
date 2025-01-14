@@ -442,18 +442,33 @@ class AtradAPI:
     def buy(self,securityId,quantity,price,orderType="limit",tif="day",day=1,minfillqty=0,discloseqty=None):
         print("Processing Buy Order")
         
-        securityProperties = self.getSecurityProperties(securityId)
+        securityProperties = self.getWatchForSecurity(securityId)
         if securityProperties:
             print("Security Properties fetched")
         else:
             print("Failed to fetch Security Properties")
             return False
 
-        orderStatus = self.getMarketStatus(securityId)["tradestatus"]
+        orderRestriction = self.getOrderRestrictions(securityId)
+        if orderRestriction:
+            print("Order Restrictions fetched")
+        else:
+            print("Failed to fetch Order Restrictions")
+            return False
+        
+        commision = self.calcCommision(quantity * price)
+        if commision:
+            print("Commision Calculated")
+        else:
+            print("Failed to calculate Commision")
+            return False
+        
+        orderStatus = securityProperties["tradestatus"] 
+        marketPrice = securityProperties["askprice"]
 
         #checking if buyingpower is enough
-        buyingPower = float(self.getOrderRestrictions(securityId)["buyingpower"])
-        orderValue = quantity * price + float(self.calcCommision(quantity * price))
+        buyingPower = float(orderRestriction["buyingpower"])
+        orderValue = quantity * price + float(commision)
         if orderValue > buyingPower:
             print("Not enough buying power")
             return False
@@ -463,6 +478,7 @@ class AtradAPI:
             print("Buying is disabled")
             return False
 
+        #create duplicate order id
         duplicateOrderId = self.genDuplicateOrderId()
 
         if discloseqty == None:
@@ -495,7 +511,7 @@ class AtradAPI:
             "oldQty":"",
             "remainder":"",
             "orderplacedate":"",
-            "marketPrice":securityProperties["askprice"],
+            "marketPrice":marketPrice,
             "oldDisclose":"",
             "txtContraBroker":"",
             "txtapprovalReason":"",
