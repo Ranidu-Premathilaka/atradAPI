@@ -8,7 +8,7 @@ username = os.getenv("USERNAME")
 password = os.getenv("PASSWORD")
 
 api = AtradAPI(username, password)
-api.buy("AAIC.N0000",2,13.2,day=1)
+api.buy("AAIC.N0000",2,11.2,day=1)
 
-print(api.getUserInfo())
-print(api.genDuplicateOrderId())
+#print(api.getUserInfo())
+#print(api.genDuplicateOrderId())
